@@ -17,12 +17,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Экземпляры класса благодаря которым мы будет разбирать данные на куски
     private Elements value;
     private Elements type;
+    // Массивы для хранения данных и передачи их адаптеру
     private List<String> valueList = new ArrayList<>();
     private List<String> typeList = new ArrayList<>();
     private List<String> dataList = new ArrayList<>();
+    // Адаптер
     private ArrayAdapter<String> adapter;
+
     private ListView listView;
 
     @Override
@@ -31,28 +35,36 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listView = (ListView) findViewById(R.id.listView);
-
+        // Запрос к нашему потоку для выборки данных
         new JSOUPtask().execute();
 
+        // Добавляем данные для ListView
         adapter = new ArrayAdapter<>(this, R.layout.list_item, R.id.dataName, dataList);
 
     }
 
-    public class JSOUPtask extends AsyncTask<String, Void, String> {
+    // Внутренний класс создающий запрос
+    private class JSOUPtask extends AsyncTask<String, Void, String> {
 
+        // Метод выполняющий запрос в фоне
         @Override
         protected String doInBackground(String... params) {
 
+            // Экземпляр класса захватывающего страницу
             Document doc;
 
             try {
+                // Страница откуда будем парсить
                 doc = Jsoup.connect("https://kurs.censor.net.ua/").get();
+                // задаем с какого места
                 value = doc.select(".cur-value");
                 type = doc.select(".cur-type");
 
+                // Очищаем массивы
                 valueList.clear();
                 typeList.clear();
 
+                // В циклах захватываем все данные которые есть и записываем их массивы
                 for (Element values : value) {
                     valueList.add(values.text());
                 }
@@ -60,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                     typeList.add(types.text());
                 }
 
+                // Заполняем массив данными из других массивов
                 for (int i = 0; i < type.size(); i++) {
                     dataList.add(valueList.get(i) + " - " + typeList.get(i));
                 }
@@ -73,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            // после запроса обновляем листвью
             listView.setAdapter(adapter);
         }
     }
